@@ -1,0 +1,57 @@
+diff --git a/drivers/gpu/drm/mediatek/mediatek_v2/mtk_disp_gamma.c b/drivers/gpu/drm/mediatek/mediatek_v2/mtk_disp_gamma.c
+index 45cf678e8..43983a894 100644
+--- a/drivers/gpu/drm/mediatek/mediatek_v2/mtk_disp_gamma.c
++++ b/drivers/gpu/drm/mediatek/mediatek_v2/mtk_disp_gamma.c
+@@ -4,6 +4,7 @@
+  */
+ 
+ #include <linux/clk.h>
++#include <linux/slab.h>
+ #include <linux/component.h>
+ #include <linux/of_device.h>
+ #include <linux/of_irq.h>
+@@ -610,27 +611,36 @@ void mtk_trans_gain_to_gamma(struct drm_crtc *crtc,
+ 		g_sb_param.gain[gain_g] != gain[gain_g] &&
+ 		g_sb_param.gain[gain_b] != gain[gain_b]) {
+ 
++		union {
++			struct DISP_GAMMA_LUT_T lut;
++			struct DISP_GAMMA_12BIT_LUT_T lut12;
++		} *data;
++
++		data = kzalloc(sizeof(*data), GFP_KERNEL);
++		if (!data) {
++			DDPPR_ERR("%s: gamma LUT allocation failed\n", __func__);
++			return;
++		}
++
+ 		g_sb_param.gain[gain_r] = gain[gain_r];
+ 		g_sb_param.gain[gain_g] = gain[gain_g];
+ 		g_sb_param.gain[gain_b] = gain[gain_b];
+ 
+ 		if (g_gamma_data_mode == HW_8BIT) {
+-			struct DISP_GAMMA_LUT_T data;
+-
+-			calculateGammaLut(&data);
++			calculateGammaLut(&data->lut);
+ 			mtk_crtc_user_cmd(crtc, default_comp,
+-				SET_GAMMALUT, (void *)&data);
++				SET_GAMMALUT, &data->lut);
+ 		}
+ 
+ 		if (g_gamma_data_mode == HW_12BIT_MODE_8BIT ||
+ 			g_gamma_data_mode == HW_12BIT_MODE_12BIT) {
+-			struct DISP_GAMMA_12BIT_LUT_T data;
+-
+-			calculateGamma12bitLut(&data);
++			calculateGamma12bitLut(&data->lut12);
+ 			mtk_crtc_user_cmd(crtc, default_comp,
+-				SET_12BIT_GAMMALUT, (void *)&data);
++				SET_12BIT_GAMMALUT, &data->lut12);
+ 		}
+ 
++		kfree(data);
++
+ 		mtk_leds_brightness_set("lcd-backlight", bl);
+ 		mtk_crtc_check_trigger(default_comp->mtk_crtc, false, true);
+ 		DDPINFO("%s : gain = %d, backlight = %d",
