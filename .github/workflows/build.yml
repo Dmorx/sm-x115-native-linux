@@ -1,0 +1,35 @@
+name: Build SM-X115 Linux kernel
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  kernel:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential clang-19 lld-19 llvm-19 flex bison bc libssl-dev libelf-dev cpio rsync python3 kmod
+      - name: Build kernel and matching modules
+        shell: bash
+        run: |
+          set -o pipefail
+          bash build.sh 2>&1 | tee build.log
+      - name: Save successful build
+        uses: actions/upload-artifact@v4
+        with:
+          name: SM-X115-native-kernel
+          path: dist/
+          if-no-files-found: error
+          retention-days: 7
+      - name: Save build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-build-log
+          path: build.log
+          if-no-files-found: ignore
+          retention-days: 7
