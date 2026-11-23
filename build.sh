@@ -21,6 +21,8 @@ git -C kernel apply --check ../typec-debug.patch
 git -C kernel apply ../typec-debug.patch
 git -C kernel apply --check ../typec-fod.patch
 git -C kernel apply ../typec-fod.patch
+git -C kernel apply --check ../thermal-camera-iommu.patch
+git -C kernel apply ../thermal-camera-iommu.patch
 mkdir -p out dist
 cp native.config out/.config
 # The MT6983 audio driver uses APIs absent from this source snapshot.
