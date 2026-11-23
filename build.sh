@@ -13,6 +13,8 @@ git -C kernel apply --check ../msync-integer.patch
 git -C kernel apply ../msync-integer.patch
 git -C kernel apply --check ../prototype-fixes.patch
 git -C kernel apply ../prototype-fixes.patch
+git -C kernel apply --check ../usb-charger-vcodec.patch
+git -C kernel apply ../usb-charger-vcodec.patch
 mkdir -p out dist
 cp native.config out/.config
 # The MT6983 audio driver uses APIs absent from this source snapshot.

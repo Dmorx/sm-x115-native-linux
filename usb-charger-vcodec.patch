@@ -1,0 +1,81 @@
+diff --git a/drivers/media/platform/mtk-vcodec/mtk_vcodec_util.c b/drivers/media/platform/mtk-vcodec/mtk_vcodec_util.c
+index 44e7e73d1..49958ca3a 100644
+--- a/drivers/media/platform/mtk-vcodec/mtk_vcodec_util.c
++++ b/drivers/media/platform/mtk-vcodec/mtk_vcodec_util.c
+@@ -9,6 +9,7 @@
+ #include <linux/module.h>
+ #include <media/v4l2-mem2mem.h>
+ #include <media/videobuf2-dma-contig.h>
++#include <linux/slab.h>
+ #include <linux/dma-heap.h>
+ #include <linux/dma-direction.h>
+ #include <uapi/linux/dma-heap.h>
+@@ -715,7 +716,7 @@ void mtk_vcodec_set_log(struct mtk_vcodec_dev *dev, const char *val,
+ 	enum mtk_vcodec_log_index log_index)
+ {
+ 	int i, argc = 0;
+-	char argv[MAX_SUPPORTED_LOG_PARAMS_COUNT * 2][LOG_PARAM_INFO_SIZE] = {0};
++	char (*argv)[LOG_PARAM_INFO_SIZE];
+ 	char *temp = NULL;
+ 	char *token = NULL;
+ 	long temp_val = 0;
+@@ -724,6 +725,10 @@ void mtk_vcodec_set_log(struct mtk_vcodec_dev *dev, const char *val,
+ 	if (dev == NULL || val == NULL || strlen(val) == 0)
+ 		return;
+ 
++	argv = kcalloc(MAX_SUPPORTED_LOG_PARAMS_COUNT * 2, sizeof(*argv), GFP_KERNEL);
++	if (!argv)
++		return;
++
+ 	mtk_v4l2_debug(0, "val: %s, log_index: %d", val, log_index);
+ 
+ 	strncpy(log, val, LOG_PROPERTY_SIZE - 1);
+@@ -755,6 +760,7 @@ void mtk_vcodec_set_log(struct mtk_vcodec_dev *dev, const char *val,
+ 		}
+ 	}
+ 
++	kfree(argv);
+ 	mtk_vcodec_build_log_string(dev, log_index);
+ 
+ 	if (log_index == MTK_VCODEC_LOG_INDEX_LOG) {
+diff --git a/drivers/misc/mediatek/typec/tcpc/tcpc_aw35615/platform_helpers.c b/drivers/misc/mediatek/typec/tcpc/tcpc_aw35615/platform_helpers.c
+index 50306c8b5..ea7d35f59 100644
+--- a/drivers/misc/mediatek/typec/tcpc/tcpc_aw35615/platform_helpers.c
++++ b/drivers/misc/mediatek/typec/tcpc/tcpc_aw35615/platform_helpers.c
+@@ -47,7 +47,7 @@
+  *   [extern for other module]
+  *
+  *********************************************************/
+-extern gxy_usb_set_usbccflag( enum gxy_usb_orient cc_flag);
++extern void gxy_usb_set_usbccflag(enum gxy_usb_orient cc_flag);
+ /*Tab A9 code for SR-AX6739A-01-468 by hualei at 20230508 end*/
+ 
+ const char *AW_DT_INTERRUPT_INTN =    "aw_interrupt_int_n";
+diff --git a/drivers/misc/mediatek/typec/tcpc/tcpci_typec.c b/drivers/misc/mediatek/typec/tcpc/tcpci_typec.c
+index 6a7dc8cae..6f75e4473 100644
+--- a/drivers/misc/mediatek/typec/tcpc/tcpci_typec.c
++++ b/drivers/misc/mediatek/typec/tcpc/tcpci_typec.c
+@@ -19,7 +19,7 @@
+  *   [extern for other module]
+  *
+  *********************************************************/
+-extern gxy_usb_set_usbccflag( enum gxy_usb_orient cc_flag);
++extern void gxy_usb_set_usbccflag(enum gxy_usb_orient cc_flag);
+ /*Tab A9 code for SR-AX6739A-01-467 by hualei at 20230506 end*/
+ 
+ 
+diff --git a/drivers/power/supply/mtk_charger.c b/drivers/power/supply/mtk_charger.c
+index af24ecdd6..c5d0fe5ee 100644
+--- a/drivers/power/supply/mtk_charger.c
++++ b/drivers/power/supply/mtk_charger.c
+@@ -2647,8 +2647,8 @@ static void charger_check_status(struct mtk_charger *info)
+ 	/*Tab A9 U code for AX6739AU-127 by wenyaqi at 20240102 end*/
+ 
+ 	/*Tab A9 code for AX6739A-723 by qiaodan at 20230606 start*/
+-	static s_aconline_old = false;
+-	static s_usbonline_old = false;
++	static int s_aconline_old = false;
++	static int s_usbonline_old = false;
+ 	/*Tab A9 code for AX6739A-723 by qiaodan at 20230606 end*/
+ 
+ 	int temperature;
