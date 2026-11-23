@@ -1,0 +1,82 @@
+diff --git a/drivers/misc/mediatek/imgsensor/src/common/v1_1/a0901frontsc201csly_mipi_raw/a0901frontsc201csly_mipi_raw.c b/drivers/misc/mediatek/imgsensor/src/common/v1_1/a0901frontsc201csly_mipi_raw/a0901frontsc201csly_mipi_raw.c
+index 560f304c0..4aaa7595a 100644
+--- a/drivers/misc/mediatek/imgsensor/src/common/v1_1/a0901frontsc201csly_mipi_raw/a0901frontsc201csly_mipi_raw.c
++++ b/drivers/misc/mediatek/imgsensor/src/common/v1_1/a0901frontsc201csly_mipi_raw/a0901frontsc201csly_mipi_raw.c
+@@ -189,7 +189,7 @@ static void write_cmos_sensor(kal_uint32 addr, kal_uint32 para)
+ 	iWriteRegI2C(pu_send_cmd, 3, imgsensor.i2c_write_id);
+ }
+ 
+-static void set_dummy()
++static void set_dummy(void)
+ {
+ 
+ 	pr_debug("dummyline = %d, dummypixels = %d \n", imgsensor.dummy_line, imgsensor.dummy_pixel);
+@@ -200,7 +200,7 @@ static void set_dummy()
+ 
+ }    /*    set_dummy  */
+ 
+-static kal_uint32 return_sensor_id()
++static kal_uint32 return_sensor_id(void)
+ {
+ 	return ((read_cmos_sensor(0x3107) << 8) | read_cmos_sensor(0x3108)); //0xeb2c
+ }
+@@ -629,13 +629,13 @@ static void normal_video_setting(kal_uint16 currefps)
+ 	preview_setting();
+ }
+ 
+-static void hs_video_setting()
++static void hs_video_setting(void)
+ {
+ 	pr_debug("E! VGA 120fps\n");
+ 	preview_setting();
+ }
+ 
+-static void slim_video_setting()
++static void slim_video_setting(void)
+ {
+ 	pr_debug("E! HD 30fps\n");
+ 	preview_setting();
+diff --git a/drivers/misc/mediatek/iommu/iommu_secure.c b/drivers/misc/mediatek/iommu/iommu_secure.c
+index a97d34839..b9e997339 100644
+--- a/drivers/misc/mediatek/iommu/iommu_secure.c
++++ b/drivers/misc/mediatek/iommu/iommu_secure.c
+@@ -227,7 +227,7 @@ int ao_secure_dbg_switch_by_atf(uint32_t type,
+ }
+ EXPORT_SYMBOL_GPL(ao_secure_dbg_switch_by_atf);
+ 
+-mtk_iommu_secure_bk_tf_dump(uint32_t type, uint32_t id, uint32_t bank,
++int mtk_iommu_secure_bk_tf_dump(uint32_t type, uint32_t id, uint32_t bank,
+ 		u32 *iova, u32 *pa, u32 *fault_id)
+ {
+ 	int ret;
+diff --git a/drivers/thermal/mediatek/thermal_trace.c b/drivers/thermal/mediatek/thermal_trace.c
+index 2f95e1f00..aa14ec9d0 100644
+--- a/drivers/thermal/mediatek/thermal_trace.c
++++ b/drivers/thermal/mediatek/thermal_trace.c
+@@ -193,7 +193,7 @@ static void thermal_info_work(struct work_struct *work)
+ 	thermal_info_timer_add(thermal_trace_data.enable);
+ }
+ 
+-static void get_cpu_info()
++static void get_cpu_info(void)
+ {
+ 	cpu_info.ttj = sign_extend32(
+ 			readl(thermal_csram_base + CPU_TTJ_OFFSET), 31);
+@@ -224,7 +224,7 @@ static void get_cpu_info()
+ 	cpu_info.B_max_temp = sign_extend32(
+ 			readl(thermal_csram_base + CPU_B_MAX_TEMP_OFFSET), 31);
+ }
+-static void get_gpu_info()
++static void get_gpu_info(void)
+ {
+ 	gpu_info.ttj = sign_extend32(
+ 			readl(thermal_csram_base + GPU_TTJ_OFFSET), 31);
+@@ -235,7 +235,7 @@ static void get_gpu_info()
+ 	gpu_info.limit_freq = readl(thermal_csram_base + GPU_LIMIT_FREQ_OFFSET);
+ 	gpu_info.cur_freq = readl(thermal_csram_base + GPU_CUR_FREQ_OFFSET);
+ }
+-static void get_apu_info()
++static void get_apu_info(void)
+ {
+ 	if (thermal_apu_mbox_base) {
+ 		apu_info.ttj = sign_extend32(
