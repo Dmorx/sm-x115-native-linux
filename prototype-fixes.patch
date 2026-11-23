@@ -1,0 +1,26 @@
+diff --git a/drivers/gpu/drm/mediatek/mml/mtk-mml-pq-core.c b/drivers/gpu/drm/mediatek/mml/mtk-mml-pq-core.c
+index 33e5c3731..69b06b71d 100644
+--- a/drivers/gpu/drm/mediatek/mml/mtk-mml-pq-core.c
++++ b/drivers/gpu/drm/mediatek/mml/mtk-mml-pq-core.c
+@@ -1753,7 +1753,7 @@ static bool ut_inited;
+ static struct list_head ut_mml_tasks;
+ static u32 ut_task_cnt;
+ 
+-static void ut_init()
++static void ut_init(void)
+ {
+ 	if (ut_inited)
+ 		return;
+diff --git a/drivers/misc/mediatek/slbc/slbc_ipi.c b/drivers/misc/mediatek/slbc/slbc_ipi.c
+index 0de5dda91..6dd4e8473 100644
+--- a/drivers/misc/mediatek/slbc/slbc_ipi.c
++++ b/drivers/misc/mediatek/slbc/slbc_ipi.c
+@@ -60,7 +60,7 @@ int slbc_sspm_slc_disable(int disable)
+ }
+ EXPORT_SYMBOL_GPL(slbc_sspm_slc_disable);
+ 
+-int slbc_sspm_enable(enable)
++int slbc_sspm_enable(int enable)
+ {
+ 	struct slbc_ipi_data slbc_ipi_d;
+ 
