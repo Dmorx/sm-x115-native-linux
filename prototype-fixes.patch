@@ -11,6 +11,32 @@ index 33e5c3731..69b06b71d 100644
  {
  	if (ut_inited)
  		return;
+diff --git a/drivers/misc/mediatek/cm_mgr/mtk_cm_ipi.c b/drivers/misc/mediatek/cm_mgr/mtk_cm_ipi.c
+index 66b4dca80..fe4116860 100644
+--- a/drivers/misc/mediatek/cm_mgr/mtk_cm_ipi.c
++++ b/drivers/misc/mediatek/cm_mgr/mtk_cm_ipi.c
+@@ -36,7 +36,7 @@ void cm_set_ipi_enable(int enable)
+ }
+ EXPORT_SYMBOL(cm_set_ipi_enable);
+ 
+-void cm_sspm_enable(enable)
++void cm_sspm_enable(int enable)
+ {
+ 	cm_mgr_to_sspm_command(IPI_CM_MGR_ENABLE, enable);
+ }
+diff --git a/drivers/misc/mediatek/mcdi/mtk_mcdi_governor.c b/drivers/misc/mediatek/mcdi/mtk_mcdi_governor.c
+index 5c2e86987..914771ee4 100644
+--- a/drivers/misc/mediatek/mcdi/mtk_mcdi_governor.c
++++ b/drivers/misc/mediatek/mcdi/mtk_mcdi_governor.c
+@@ -180,7 +180,7 @@ void set_mcdi_idle_state(int cpu, int state)
+ 	mcdi_prof_set_idle_state(cpu, state);
+ }
+ 
+-int get_cluster_off_token(cpu)
++int get_cluster_off_token(int cpu)
+ {
+ 	unsigned long flags;
+ 	int cluster;
 diff --git a/drivers/misc/mediatek/slbc/slbc_ipi.c b/drivers/misc/mediatek/slbc/slbc_ipi.c
 index 0de5dda91..6dd4e8473 100644
 --- a/drivers/misc/mediatek/slbc/slbc_ipi.c
@@ -23,4 +49,17 @@ index 0de5dda91..6dd4e8473 100644
 +int slbc_sspm_enable(int enable)
  {
  	struct slbc_ipi_data slbc_ipi_d;
+ 
+diff --git a/drivers/misc/mediatek/ssc/ssc_module.c b/drivers/misc/mediatek/ssc/ssc_module.c
+index 0468f71ee..14544091a 100644
+--- a/drivers/misc/mediatek/ssc/ssc_module.c
++++ b/drivers/misc/mediatek/ssc/ssc_module.c
+@@ -63,7 +63,7 @@ static unsigned int ssc_disable;
+ static BLOCKING_NOTIFIER_HEAD(vlogic_bound_chain);
+ static struct regulator *ssc_vcore_voter;
+ 
+-static int set_vcore_vlogic_bound(en)
++static int set_vcore_vlogic_bound(int en)
+ {
+ 	int ret;
  
