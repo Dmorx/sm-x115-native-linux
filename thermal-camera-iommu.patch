@@ -93,3 +93,29 @@ index 7eaee7678..c43825dc1 100644
  		int sensor_type)
  {
  	return transceiver_comm_with(sensor_type,
+diff --git a/drivers/gpu/mediatek/gpufreq/v2/Makefile b/drivers/gpu/mediatek/gpufreq/v2/Makefile
+index c86df9ea5..975757da9 100644
+--- a/drivers/gpu/mediatek/gpufreq/v2/Makefile
++++ b/drivers/gpu/mediatek/gpufreq/v2/Makefile
+@@ -69,7 +69,8 @@ mtk_gpufreq_mt6893-y := \
+ mtk_gpufreq_mt6895-y := \
+ 	gpufreq_history_common.o \
+ 	gpuppm.o \
+-	gpufreq_mt6895.o
++	gpufreq_mt6895.o \
++	gpudfd_mt6895.o
+ 
+ mtk_gpufreq_mt6983-y := \
+ 	gpufreq_history_common.o \
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index dc9feadc4..4884b492f 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -222,6 +222,7 @@ bool task_is_booster(struct task_struct *tsk) {
+ 
+     return false;
+ }
++EXPORT_SYMBOL_GPL(task_is_booster);
+ 
+ static inline struct cpuset *css_cs(struct cgroup_subsys_state *css)
+ {
