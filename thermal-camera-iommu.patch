@@ -80,3 +80,16 @@ index 2f95e1f00..aa14ec9d0 100644
  {
  	if (thermal_apu_mbox_base) {
  		apu_info.ttj = sign_extend32(
+diff --git a/drivers/misc/mediatek/sensor/2.0/sensorhub/transceiver.c b/drivers/misc/mediatek/sensor/2.0/sensorhub/transceiver.c
+index 7eaee7678..c43825dc1 100644
+--- a/drivers/misc/mediatek/sensor/2.0/sensorhub/transceiver.c
++++ b/drivers/misc/mediatek/sensor/2.0/sensorhub/transceiver.c
+@@ -724,7 +724,7 @@ static int transceiver_config(struct hf_device *hf_dev,
+ }
+ /*Tab A9 code for SR-AX6739A-01-254 by zhangziyi at 20230522 end*/
+ 
+-static transceiver_selftest(struct hf_device *hf_dev,
++static int transceiver_selftest(struct hf_device *hf_dev,
+ 		int sensor_type)
+ {
+ 	return transceiver_comm_with(sensor_type,
