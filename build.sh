@@ -9,6 +9,8 @@ p.write_text(p.read_text().replace('source "drivers/kernelsu/Kconfig"', ''))
 PY
 git -C kernel apply --check ../gamma-stack.patch
 git -C kernel apply ../gamma-stack.patch
+git -C kernel apply --check ../msync-integer.patch
+git -C kernel apply ../msync-integer.patch
 mkdir -p out dist
 cp native.config out/.config
 # The MT6983 audio driver uses APIs absent from this source snapshot.
