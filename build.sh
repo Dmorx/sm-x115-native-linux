@@ -32,11 +32,9 @@ export CCACHE_BASEDIR="$PWD"
 ccache --max-size=2G
 trap 'ccache --show-stats' EXIT
 make -C kernel O="$PWD/out" ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- LLVM=1 LLVM_IAS=1 olddefconfig
-# Compile previously failing objects before spending time on the full build.
+# Compile all enabled Type-C drivers before the full build.
+make -C kernel O="$PWD/out" ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- LLVM=1 LLVM_IAS=1 CC="ccache clang" KCFLAGS="-Wno-error" -j"$(nproc)" drivers/misc/mediatek/typec/tcpc/
 make -C kernel O="$PWD/out" ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- LLVM=1 LLVM_IAS=1 CC="ccache clang" KCFLAGS="-Wno-error" -j"$(nproc)" \
-  drivers/misc/mediatek/typec/tcpc/tcpc_et7304.o \
-  drivers/misc/mediatek/typec/tcpc/tcpc_cps8851.o \
-  drivers/misc/mediatek/typec/tcpc/tcpci_typec.o \
   drivers/media/platform/mtk-vcodec/mtk_vcodec_enc.o \
   drivers/media/platform/mtk-vcodec/mtk_vcodec_util.o \
   drivers/power/supply/mtk_charger.o
