@@ -1,0 +1,68 @@
+diff --git a/drivers/misc/mediatek/typec/tcpc/tcpc_cps8851.c b/drivers/misc/mediatek/typec/tcpc/tcpc_cps8851.c
+index cead43e4c..7062c0336 100644
+--- a/drivers/misc/mediatek/typec/tcpc/tcpc_cps8851.c
++++ b/drivers/misc/mediatek/typec/tcpc/tcpc_cps8851.c
+@@ -180,7 +180,7 @@ static int cps8851_read_device(void *client, u32 reg, int len, void *dst)
+ {
+     struct i2c_client *i2c = client;
+     int ret = 0, count = 5;
+-    u64 t1 = 0, t2 = 0;
++    u64 t1 __maybe_unused = 0, t2 __maybe_unused = 0;
+ 
+     while (1) {
+         t1 = local_clock();
+@@ -201,7 +201,7 @@ static int cps8851_write_device(void *client, u32 reg, int len, const void *src)
+ {
+     struct i2c_client *i2c = client;
+     int ret = 0, count = 5;
+-    u64 t1 = 0, t2 = 0;
++    u64 t1 __maybe_unused = 0, t2 __maybe_unused = 0;
+ 
+     while (1) {
+         t1 = local_clock();
+@@ -839,10 +839,9 @@ static inline int cps8851_fault_status_vconn_ov(struct tcpc_device *tcpc)
+ 
+ int cps8851_fault_status_clear(struct tcpc_device *tcpc, uint8_t status)
+ {
+-    int ret;
+ 
+     if (status & TCPC_V10_REG_FAULT_STATUS_VCONN_OV)
+-        ret = cps8851_fault_status_vconn_ov(tcpc);
++        cps8851_fault_status_vconn_ov(tcpc);
+ 
+     cps8851_i2c_write8(tcpc, TCPC_V10_REG_FAULT_STATUS, status);
+     return 0;
+diff --git a/drivers/misc/mediatek/typec/tcpc/tcpc_rt1711h.c b/drivers/misc/mediatek/typec/tcpc/tcpc_rt1711h.c
+index 5ff4006a3..7f4669fbf 100644
+--- a/drivers/misc/mediatek/typec/tcpc/tcpc_rt1711h.c
++++ b/drivers/misc/mediatek/typec/tcpc/tcpc_rt1711h.c
+@@ -173,7 +173,7 @@ static int rt1711_read_device(void *client, u32 reg, int len, void *dst)
+ {
+ 	struct i2c_client *i2c = client;
+ 	int ret = 0, count = 5;
+-	u64 t1 = 0, t2 = 0;
++	u64 t1 __maybe_unused = 0, t2 __maybe_unused = 0;
+ 
+ 	while (1) {
+ 		t1 = local_clock();
+@@ -194,7 +194,7 @@ static int rt1711_write_device(void *client, u32 reg, int len, const void *src)
+ {
+ 	struct i2c_client *i2c = client;
+ 	int ret = 0, count = 5;
+-	u64 t1 = 0, t2 = 0;
++	u64 t1 __maybe_unused = 0, t2 __maybe_unused = 0;
+ 
+ 	while (1) {
+ 		t1 = local_clock();
+@@ -825,10 +825,9 @@ static inline int rt1711_fault_status_vconn_ov(struct tcpc_device *tcpc)
+ 
+ int rt1711_fault_status_clear(struct tcpc_device *tcpc, uint8_t status)
+ {
+-	int ret;
+ 
+ 	if (status & TCPC_V10_REG_FAULT_STATUS_VCONN_OV)
+-		ret = rt1711_fault_status_vconn_ov(tcpc);
++		rt1711_fault_status_vconn_ov(tcpc);
+ 
+ 	rt1711_i2c_write8(tcpc, TCPC_V10_REG_FAULT_STATUS, status);
+ 	return 0;
