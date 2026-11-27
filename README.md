@@ -6,7 +6,7 @@ This public edition contains kernel configuration and patches, the Type-C state 
 
 ## Build
 
-The existing `build.sh` and manually triggered GitHub Actions workflow build the kernel and matching modules from the pinned upstream commit. They do not create a Debian disk image. See `PUBLIC-RELEASE.md` for the separately prepared boot image and privacy changes.
+The existing `build.sh` and manually triggered GitHub Actions workflow build the kernel and matching modules from the pinned upstream commit. They do not create a Debian disk image.
 
 `module/` contains the GPL Type-C attachment helper. Build it against the matching configured kernel tree:
 
@@ -29,3 +29,13 @@ Kernel sources: https://github.com/prabhatkrmishra/kernel_samsung_gta9 at commit
 ## Download the clean boot image
 
 Download or clone this repository, then run `python3 reassemble-boot.py`. The script joins the binary parts under `release/`, verifies SHA-256, decompresses the image and checks its 64 MiB size. These parts are a transport format; never flash a part file. The image is not a complete Debian distribution.
+
+## Public image preparation
+
+The public image retains the tested kernel payload and matching modules. Its device serial is generic. Unauthenticated telnet and USB serial root shells are disabled; automatic Wi-Fi, modem, SSH, Avahi and personal swap startup are removed. USB gadget networking uses development address `10.66.0.2`. The custom module has debug information stripped and its embedded private source path replaced with a public path.
+
+Prepare a fresh Debian 13 ARM64 filesystem and create your own account. No used Debian filesystem, personal applications, home directories or modem calibration data is included.
+
+The image was structurally checked, including the ramdisk and nested archives; known personal markers were absent. The published image was downloaded, reassembled and checksum-verified. It has not been boot-tested after sanitization. Validation details and checksums are in `release/manifest.json`.
+
+`runtime/etc/mdev.conf` is the single configuration source for both the initramfs `/etc/mdev.conf` and Debian `/etc/mdev.conf`. Copy it into both locations when preparing a new image. The unused storage-module load list has been removed; the boot script uses `initramfs/usb-modules.load` and explicit storage module loading.
