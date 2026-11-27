@@ -1,0 +1,33 @@
+{
+  "model": "SM-X115",
+  "scope": "boot and up_param rollback only; not full firmware",
+  "hardware_history": "Both partitions written and read-back verified in earlier restoration. Factory reset was subsequently needed; Samsung logo and USB MTP were observed. This archive has not been flashed.",
+  "firmware_build": "not independently established for public compatibility; match against your own original firmware before flashing",
+  "images": [
+    {
+      "name": "boot.img",
+      "partition": "boot",
+      "bytes": 67108864,
+      "sha256": "74c5b9932b76ca585a53ed9a65427f050119179797863cf72f419c63af272b11"
+    },
+    {
+      "name": "up_param.bin",
+      "partition": "up_param",
+      "bytes": 8388608,
+      "sha256": "9e64d790acf5d2fc2ed02960eab0130a5ed84ed9cb681bb3a6ca1d6b3a22663d"
+    }
+  ],
+  "tar_sha256": "908d2e164c627863c4dd8cf268fb21544b07acde136d3a5b59c95a44ffe234ea",
+  "gzip_sha256": "bb026c92fdd5c1164171948ecc1f885eb47aaf2aa3cc5d17aa0f1e56cb6c9e0f",
+  "gzip_bytes": 21001254,
+  "parts": [
+    "restore.tar.gz.part00",
+    "restore.tar.gz.part01",
+    "restore.tar.gz.part02",
+    "restore.tar.gz.part03",
+    "restore.tar.gz.part04",
+    "restore.tar.gz.part05",
+    "restore.tar.gz.part06",
+    "restore.tar.gz.part07"
+  ]
+}

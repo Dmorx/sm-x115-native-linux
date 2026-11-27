@@ -39,3 +39,7 @@ Prepare a fresh Debian 13 ARM64 filesystem and create your own account. No used 
 The image was structurally checked, including the ramdisk and nested archives; known personal markers were absent. The published image was downloaded, reassembled and checksum-verified. It has not been boot-tested after sanitization. Validation details and checksums are in `release/manifest.json`.
 
 `runtime/etc/mdev.conf` is the single configuration source for both the initramfs `/etc/mdev.conf` and Debian `/etc/mdev.conf`. Copy it into both locations when preparing a new image. The unused storage-module load list has been removed; the boot script uses `initramfs/usb-modules.load` and explicit storage module loading.
+
+## Return to Android
+
+See [Android boot rollback / بازگردانی اندروید](android-restore/README.md). Run `python3 android-restore/reassemble.py` to create a verified restore tar containing only the saved Android boot and Samsung up_param images. This is not full firmware; exact firmware compatibility must be verified. The earlier restoration required a subsequent factory reset, and this new tar has not been flash-tested.
