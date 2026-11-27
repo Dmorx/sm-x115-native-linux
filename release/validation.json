@@ -1,0 +1,9 @@
+{
+  "date": "2026-11-28",
+  "files_inspected_including_nested_archives": 819,
+  "known_sensitive_markers_found": 0,
+  "kernel_payload_unchanged": true,
+  "hardware_boot_test": false,
+  "debian_rootfs_included": false,
+  "boot_image_sha256": "74fea98a4d75948fcfed0e9ce354b7c65fd713025e98b6b90432d4adf50543be"
+}

@@ -1,0 +1,1 @@
+ACTION=="add", SUBSYSTEM=="input", KERNEL=="event[0-9]*", RUN+="/usr/local/libexec/tablet-input-ready.py"

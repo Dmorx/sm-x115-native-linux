@@ -1,0 +1,27 @@
+{
+  "parts": [
+    "boot.img.gz.part00",
+    "boot.img.gz.part01",
+    "boot.img.gz.part02",
+    "boot.img.gz.part03",
+    "boot.img.gz.part04",
+    "boot.img.gz.part05",
+    "boot.img.gz.part06",
+    "boot.img.gz.part07",
+    "boot.img.gz.part08",
+    "boot.img.gz.part09",
+    "boot.img.gz.part10",
+    "boot.img.gz.part11",
+    "boot.img.gz.part12",
+    "boot.img.gz.part13",
+    "boot.img.gz.part14",
+    "boot.img.gz.part15",
+    "boot.img.gz.part16",
+    "boot.img.gz.part17"
+  ],
+  "gzip_sha256": "44e34b87047de5117f25ff67c4f859c56fe0ef6b7ef9c5b34325b696ec5490c0",
+  "boot_sha256": "74fea98a4d75948fcfed0e9ce354b7c65fd713025e98b6b90432d4adf50543be",
+  "gzip_bytes": 52143019,
+  "part_bytes": 3000000,
+  "hardware_boot_test": false
+}

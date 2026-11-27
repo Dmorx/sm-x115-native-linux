@@ -1,0 +1,215 @@
+#!/probe/bin/sh
+export PATH=/probe/bin
+/probe/bin/busybox --install -s /probe/bin
+mount -t proc proc /proc
+mount -t sysfs sysfs /sys
+# Keep diagnostic logs in dmesg, suppress console flashes.
+printf "1 4 1 7\n" > /proc/sys/kernel/printk
+mount -t tmpfs -o mode=0755 tmpfs /dev
+mknod /dev/console c 5 1
+mknod /dev/null c 1 3
+mknod /dev/kmsg c 1 11
+mdev -s
+
+log() {
+    printf '<3>GTA9_CMODE_STABLE: %s\n' "$*" > /dev/kmsg
+    if [ -c /dev/pmsg0 ]; then
+        printf 'GTA9_CMODE_STABLE: %s\n' "$*" > /dev/pmsg0
+    fi
+}
+
+setup_gadget() {
+    mount -t configfs configfs /sys/kernel/config || return 1
+    gadget=/sys/kernel/config/usb_gadget/gta9_probe
+    mkdir "$gadget" || return 1
+    echo 0x1d6b > "$gadget/idVendor" || return 1
+    echo 0x0104 > "$gadget/idProduct" || return 1
+    mkdir "$gadget/strings/0x409" || return 1
+    echo GTA9-NATIVE-USB-AUDIT > "$gadget/strings/0x409/product" || return 1
+    echo Samsung > "$gadget/strings/0x409/manufacturer"
+    echo SMX115-PUBLIC-LINUX > "$gadget/strings/0x409/serialnumber"
+    mkdir "$gadget/configs/c.1" "$gadget/functions/acm.usb0" "$gadget/functions/ecm.usb0" || return 1
+    echo 02:11:22:33:44:55 > "$gadget/functions/ecm.usb0/dev_addr"
+    echo 02:11:22:33:44:66 > "$gadget/functions/ecm.usb0/host_addr"
+    ln -s "$gadget/functions/acm.usb0" "$gadget/configs/c.1/acm.usb0"
+    ln -s "$gadget/functions/ecm.usb0" "$gadget/configs/c.1/ecm.usb0"
+}
+
+log INIT_STARTED
+# A device can register after insmod returns; keep looking independently.
+(
+ while :; do
+  mdev -s
+  for w in /dev/watchdog0 /dev/watchdog; do
+   [ -c "$w" ] || continue
+   exec 3>"$w" || continue
+   log "WATCHDOG_OPEN $w"
+   while :; do printf x >&3 || break; sleep 1; done
+   exec 3>&-
+  done
+  sleep 1
+ done
+) &
+echo 0 > /proc/sys/kernel/panic
+
+exec 2>/dev/kmsg
+while IFS= read -r module; do
+    if [ "${module##*/}" = mtk_charger_framework.ko ]; then
+        adc_ready=0
+        for adc in /sys/bus/iio/devices/iio:device*/of_node; do
+            case "$(readlink -f "$adc")" in *mt635x-auxadc) adc_ready=1;; esac
+        done
+        if [ "$adc_ready" != 1 ]; then
+            log CHARGER_SKIPPED_ADC_NOT_READY
+            continue
+        fi
+    fi
+    log "MODULE_START $module"
+    insmod "$module" || log "MODULE_FAILED $module"
+    log "MODULE_DONE $module"
+
+done < /usb-modules.load
+mdev -s
+
+# AW35615 has delayed core initialization. Keep the gadget disconnected until it settles.
+sleep 15
+initdone=/sys/module/musb_hdrc/parameters/kernel_init_done
+if [ -w "$initdone" ]; then echo 1 > "$initdone"; log "INIT_DONE $(cat "$initdone")"; fi
+cmode=/sys/class/udc/musb-hdrc/device/cmode
+if [ -w "$cmode" ]; then
+ log "CMODE_BEFORE $(cat "$cmode")"
+ echo 3 > "$cmode" && log "CMODE_DEVICE $(cat "$cmode")" || log CMODE_FAILED
+else log CMODE_MISSING
+fi
+# Bound the diagnostic session and return to Samsung download mode.
+: # Stable profile: reboot only on explicit command
+# The board uses OTG role switching; request peripheral role where exposed.
+for role in /sys/class/usb_role/*/role; do
+ [ -e "$role" ] || continue
+ echo device > "$role" || log "ROLE_FAILED $role"
+done
+if setup_gadget; then
+    while :; do
+        for role in /sys/class/usb_role/*/role; do
+            [ -e "$role" ] || continue
+            echo device > "$role" || log "ROLE_FAILED $role"
+        done
+        for controller in /sys/class/udc/*; do
+            [ -e "$controller" ] || continue
+            case "${controller##*/}" in dummy*) continue;; esac
+            if echo "${controller##*/}" > "$gadget/UDC"; then
+                log "UDC_BOUND ${controller##*/}"
+                break 2
+            fi
+        done
+        log UDC_NOT_BOUND
+        sleep 5
+    done
+
+    # Gadget is bound; ask the board's MUSB driver to enable its device link.
+    for mode in /sys/class/udc/*/device/mode; do
+        [ -w "$mode" ] || continue
+        echo peripheral > "$mode" || log "PERIPHERAL_MODE_FAILED $mode"
+    done
+    param=/sys/module/musb_hdrc/parameters/musb_force_on
+    if [ -w "$param" ]; then
+        echo 1 > "$param" || log USB_FORCE_ENABLE_FAILED
+        echo 2 > "$param" || log USB_RECONNECT_FAILED
+        log USB_FORCE_REQUESTED
+    else
+        log USB_FORCE_PARAMETER_MISSING
+    fi
+    ( while :; do
+      for attr in state current_speed; do
+        log "UDC_${attr} $(cat /sys/class/udc/musb-hdrc/$attr 2>&1)"
+      done
+      log "CMODE_NOW $(cat "$cmode" 2>&1)"
+      sleep 5
+    done ) &
+    (
+        mkdir -p /dev/pts /mnt/debian /lib/modules
+        mount -t devpts devpts /dev/pts 2>/dev/null || true
+        ip link set usb0 up 2>/dev/null
+        ip addr add 10.66.0.2/24 dev usb0 2>/dev/null || true
+        printf "start 10.66.0.10\nend 10.66.0.20\ninterface usb0\nopt subnet 255.255.255.0\n" > /tmp/udhcpd.conf
+        udhcpd /tmp/udhcpd.conf 2>/dev/null || true
+        # Unauthenticated TCP shell disabled in public image.
+
+        # Unpack full modules tree (for modprobe dep resolution) and load UFS
+        mkdir -p /tmp/modules
+        tar -xzf /optional-modules.tar.gz -C /tmp/modules 2>/dev/null
+        ln -sfn /tmp/modules/modules/lib/modules/5.10.205-native-test+ /lib/modules/5.10.205-native-test+
+        for m in reset-ti-syscon phy-mtk-ufs ufs-mediatek-mod; do
+            modprobe "$m" 2>/dev/null
+        done
+        for _ in 1 2 3 4 5 6 7 8 9 10; do
+            mdev -s
+            [ -b /dev/sdc61 ] && break
+            sleep 1
+        done
+        for d in /dev/sd[a-z] /dev/sd[a-z][0-9]*; do
+            [ -b "$d" ] && blockdev --setro "$d" 2>/dev/null
+        done
+        if [ -b /dev/sdc61 ]; then
+            blockdev --setrw /dev/sdc61 2>/dev/null
+            mount -t ext4 -o rw,noatime /dev/sdc61 /mnt/debian 2>/dev/null && {
+                mkdir -p /mnt/debian/proc /mnt/debian/sys /mnt/debian/dev /mnt/debian/dev/pts
+                mount -t proc proc /mnt/debian/proc 2>/dev/null || true
+                mount -t sysfs sysfs /mnt/debian/sys 2>/dev/null || true
+                mount -o bind /dev /mnt/debian/dev 2>/dev/null || true
+                mount -t devpts devpts /mnt/debian/dev/pts 2>/dev/null || true
+                ln -sfn /mnt/debian/lib/modules/5.10.205-native-test+ /lib/modules/5.10.205-native-test+
+                rm -rf /lib/firmware 2>/dev/null || true
+                ln -sfn /mnt/debian/lib/firmware /lib/firmware
+                cat << 'DEB_EOF' > /tmp/deb
+#!/probe/bin/sh
+exec env -i HOME=/root TERM=xterm-256color PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin chroot /mnt/debian /bin/bash "$@"
+DEB_EOF
+                chmod +x /tmp/deb
+                log DEBIAN_ROOT_MOUNTED
+            }
+        fi
+
+        # Recover missing runtime files without overwriting user settings.
+        for runtime_file in \
+            usr/local/bin/kmscon \
+            usr/local/bin/start-tablet-console.sh \
+            usr/local/libexec/tablet-input-ready.py \
+            usr/local/libexec/tablet-usb-otg.py \
+            usr/local/libexec/tablet-mdev-permissions.py \
+            usr/local/lib/aarch64-linux-gnu/kmscon/mod-freetype.so \
+            usr/local/lib/aarch64-linux-gnu/kmscon/mod-psf.so \
+            usr/local/lib/aarch64-linux-gnu/kmscon/mod-unifont.so \
+            etc/kmscon/tablet-brightness \
+            etc/udev/rules.d/71-tablet-input-nodes.rules \
+            etc/mdev.conf \
+            lib/modules/5.10.205-native-test+/extra/tablet_usb_state.ko; do
+            [ -e "/mnt/debian/$runtime_file" ] || tar -xzf /tablet-console-runtime.tar.gz -C /mnt/debian "$runtime_file"
+        done
+
+        # Load Display + Battery + Charger + Keys + Touchscreen
+        for m in mtk_dramc emi-mpu emi mtk-emi mtk-icc-core mtk-smi mtk_iommu mmqos-mt6789 mtk-mmdvfs \
+                 cmdq-platform-mt6789 mtk-cmdq-drv-ext mtk-mml panel-bias lcd_hx83102e_lc_hkc_video \
+                 mediatek-drm rt4831a_drv pwm-mtk-disp leds-mtk-pwm \
+                 xhci-mtk-hcd spi-mt65xx mtk-kpd mtk-pmic-keys touch_common mt6375 mt6375-adc mt6375-auxadc mt6375-charger \
+                 upm6910x_charger sc89601d_charger sgm415xx_charger rtc-mt6397 mt6358_battery \
+                 mtk_charger_framework hxchipset; do
+            modprobe "$m" 2>/dev/null
+        done
+        mdev -s
+        # Static DRM splash hands the display back before starting the text console.
+        /debian-splash >/tmp/debian-splash.log 2>&1 </dev/null || true
+        if [ -x /mnt/debian/usr/local/bin/start-tablet-console.sh ]; then
+            chroot /mnt/debian /usr/local/bin/start-tablet-console.sh >>/mnt/debian/var/log/tablet-console.log 2>&1 </dev/null &
+            log TEXT_CONSOLE_STARTED
+        else
+            log TEXT_CONSOLE_RUNTIME_MISSING
+        fi
+    ) &
+
+    # USB serial root shell disabled in the public image.
+    while :; do sleep 60; done
+fi
+
+log GADGET_SETUP_FAILED
+while :; do sleep 60; done
